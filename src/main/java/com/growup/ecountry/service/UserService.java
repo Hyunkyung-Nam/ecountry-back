@@ -80,34 +80,44 @@ public class UserService {
             Optional<Students> studentEXIST = studentRepository.findById(id);
             if(studentEXIST.isPresent()){
                 Students student = studentEXIST.get();
-                if(student.getJobId() == null){
-                    StudentDTO studentDTO = StudentDTO.builder()
-                            .id(student.getId())
-                            .name(student.getName())
-                            .rollNumber(student.getRollNumber())
-                            .rating(student.getRating())
-                            .img(student.getImg())
-                            .jobId(null)
-                            .countryId(student.getCountryId()).build();
-                    return new ApiResponseDTO<>(true, "학생 정보 조회", studentDTO);
+                // 국가 활성화 상태
+                if(student.getAvailable()){
+                    if(student.getJobId() == null){
+                        StudentDTO studentDTO = StudentDTO.builder()
+                                .id(student.getId())
+                                .name(student.getName())
+                                .rollNumber(student.getRollNumber())
+                                .rating(student.getRating())
+                                .img(student.getImg())
+                                .jobId(null)
+                                .jobImg(null)
+                                .countryId(student.getCountryId()).build();
+                        return new ApiResponseDTO<>(true, "학생 정보 조회", studentDTO);
+                    }
+                    else {
+                        StudentDTO studentDTO = StudentDTO.builder()
+                                .id(student.getId())
+                                .name(student.getName())
+                                .rollNumber(student.getRollNumber())
+                                .rating(student.getRating())
+                                .img(student.getImg())
+                                .jobId(student.getJobId())
+                                .jobImg(student.getJobImg())
+                                .countryId(student.getCountryId()).build();
+                        return new ApiResponseDTO<>(true, "학생 정보 조회", studentDTO);
+                    }
                 }
+                // 국가 비활성화 상태
                 else {
                     StudentDTO studentDTO = StudentDTO.builder()
-                            .id(student.getId())
-                            .name(student.getName())
-                            .rollNumber(student.getRollNumber())
-                            .rating(student.getRating())
-                            .img(student.getImg())
-                            .jobId(student.getJobId())
-                            .countryId(student.getCountryId()).build();
-                    return new ApiResponseDTO<>(true, "학생 정보 조회", studentDTO);
+                            .countryId(null).build();
+                    return new ApiResponseDTO<>(true, "학생 정보 조회(비활성화된 국가)", studentDTO);
                 }
             }
             else {
                 return new ApiResponseDTO<>(false, "존재하지 않는 학생입니다", null);
             }
         }
-
     }
     public Boolean pwUpdate(Long id, String pw){
         Optional<Users> userExist = userRepository.findById(id);
@@ -124,6 +134,18 @@ public class UserService {
         else {
             return false;
         }
+    }
+    //회원탈퇴
+    public ApiResponseDTO<NullType> deleteUser(Long id){
+        Users user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다"));
+        List<Countries> countriesList = countryRepository.findAllByUserId(user.getId());
+        for(Countries country : countriesList){
+            country.setAvailable(false);
+            countryRepository.save(country);
+        }
+        user.setAvailable(false);
+        userRepository.save(user);
+        return new ApiResponseDTO<>(true,"회원 탈퇴 성공",null);
     }
 
     public Boolean imgUpdate(UserDTO userDTO){
@@ -153,17 +175,19 @@ public class UserService {
                 Users user = userExist.get();
                 List<Countries> countries = countryRepository.findAllByUserId(user.getId());
                 for(Countries country : countries){
-                    CountryDTO countryDTO =
-                            CountryDTO.builder()
-                                    .id(country.getId())
-                                    .school(country.getSchool())
-                                    .name(country.getName())
-                                    .grade(country.getGrade())
-                                    .classroom(country.getClassroom())
-                                    .unit(country.getUnit())
-                                    .treasury(country.getTreasury())
-                                    .salaryDate(country.getSalaryDate()).build();
-                    userCountryDTOList.add(countryDTO);
+                    if(country.getAvailable()){
+                        CountryDTO countryDTO =
+                                CountryDTO.builder()
+                                        .id(country.getId())
+                                        .school(country.getSchool())
+                                        .name(country.getName())
+                                        .grade(country.getGrade())
+                                        .classroom(country.getClassroom())
+                                        .unit(country.getUnit())
+                                        .treasury(country.getTreasury())
+                                        .salaryDate(country.getSalaryDate()).build();
+                        userCountryDTOList.add(countryDTO);
+                    }
                 }
                 return new ApiResponseDTO<>(true,"국가목록 조회 성공",userCountryDTOList);
             }
@@ -172,7 +196,3 @@ public class UserService {
         }
     }
 }
-/* 
-회원가입 기능: Spring Security 써서 비밀번호 암호화하여 DB에 저장
-로그인 기능: 비밀번호 암호화 된 값과 비교
- */

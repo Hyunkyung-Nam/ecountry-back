@@ -41,12 +41,16 @@ public class Countries {
     @Column(nullable = false, updatable = false)
     private Integer salaryDate;
 
+    //국가 활성화 여부(기본 TRUE)
+    @Column(columnDefinition = "TINYINT(1) default 1")
+    private Boolean available;
+
     @Column(nullable = false, updatable = false)
     private String eduOfficeCode;
 
     @Column(nullable = false, updatable = false)
     private String schoolCode;
-
+    
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private Users users;

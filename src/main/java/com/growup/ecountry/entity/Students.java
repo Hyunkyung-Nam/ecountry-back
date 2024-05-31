@@ -31,6 +31,8 @@ public class Students {
 
     private String img;
 
+    private String jobImg;
+
     @Column(columnDefinition = "TINYINT(1) default 1")
     private Boolean available;
 

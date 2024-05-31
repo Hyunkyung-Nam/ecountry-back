@@ -28,6 +28,9 @@ public class Users {
 
     private String img;
 
+    @Column(columnDefinition = "TINYINT(1) default 1")
+    private Boolean available;
+
     @Builder.Default
     @OneToMany(mappedBy = "users")
     private List<Countries> countries = new ArrayList<>();

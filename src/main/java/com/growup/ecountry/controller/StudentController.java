@@ -47,19 +47,24 @@ public class StudentController {
     public ResponseEntity<ApiResponseDTO<List<StudentData>>> studentList(@PathVariable("countryId") Long countryId){
         List<StudentData> studentDataList = new ArrayList<>();
         ApiResponseDTO<List<StudentDTO>> apiData = studentService.studentList(countryId,true);
-        List<StudentDTO> students = apiData.getResult();
-        for(StudentDTO student : students) {
-            if(student.getJobId() == null) {
-                StudentData studentData = new StudentData(student.getId(), student.getName(), student.getRollNumber(), student.getRating(),"무직",student.getJobId(),null);
-                studentDataList.add(studentData);
+        if(apiData.getResult() != null){
+            List<StudentDTO> students = apiData.getResult();
+            for(StudentDTO student : students) {
+                if(student.getJobId() == null) {
+                    StudentData studentData = new StudentData(student.getId(), student.getName(), student.getRollNumber(), student.getRating(),"무직",student.getJobId(),null);
+                    studentDataList.add(studentData);
+                }
+                else {
+                    Jobs studentJob = jobRepository.findById(student.getJobId()).get();
+                    StudentData studentData = new StudentData(student.getId(), student.getName(), student.getRollNumber(), student.getRating(),studentJob.getName(),student.getJobId(),studentJob.getSkills());
+                    studentDataList.add(studentData);
+                }
             }
-            else {
-                Jobs studentJob = jobRepository.findById(student.getJobId()).get();
-                StudentData studentData = new StudentData(student.getId(), student.getName(), student.getRollNumber(), student.getRating(),studentJob.getName(),student.getJobId(),studentJob.getSkills());
-                studentDataList.add(studentData);
-            }
+            return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(), apiData.getMessage(),studentDataList));
         }
-        return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(), apiData.getMessage(),studentDataList));
+        else {
+            return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(), apiData.getMessage(),null));
+        }
     }
     //국민삭제
     @DeleteMapping("/{countryId}")
@@ -91,8 +96,14 @@ public class StudentController {
     }
     //학생이미지 수정
     @PatchMapping("/user/img/{countryId}")
-    public ResponseEntity<ApiResponseDTO<NullType>> studentImgUpdate(@PathVariable Long countryId,@RequestBody StudentDTO studentDTO){
-        return ResponseEntity.ok(studentService.studentImgUpdate(countryId,studentDTO));
+    public ResponseEntity<ApiResponseDTO<NullType>> studentImgUpdate(@PathVariable("countryId") Long countryId,@RequestHeader("Authorization") String token,@RequestParam("img")String img) {
+        TokenDTO authToken = jwt.validateToken(token);
+        if(authToken != null && authToken.getIsStudent()) {
+            return ResponseEntity.ok(studentService.studentImgUpdate(countryId,authToken.getId(),img));
+        }
+        else {
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"학생만 이용가능 합니다",null));
+        }
     }
     //알림조회
     @GetMapping("/notice")

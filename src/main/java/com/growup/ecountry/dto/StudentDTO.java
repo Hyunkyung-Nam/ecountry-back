@@ -14,6 +14,7 @@ public class StudentDTO {
     private String pw;
     private Integer rating;
     private String img;
+    private String jobImg;
     private Boolean available;
     private Long countryId;
     private Long jobId;

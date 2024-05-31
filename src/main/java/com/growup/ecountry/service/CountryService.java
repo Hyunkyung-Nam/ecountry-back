@@ -34,24 +34,37 @@ public class CountryService {
         Optional<Countries> countryExist = countryRepository.findById(countryId);
         if (countryExist.isPresent()) {
             Countries country = countryExist.get();
-            CountryDTO countryDTO = CountryDTO.builder()
-                    .school(country.getSchool())
-                    .name(country.getName())
-                    .grade(country.getGrade())
-                    .classroom(country.getClassroom())
-                    .unit(country.getUnit())
-                    .treasury(country.getTreasury())
-                    .salaryDate(country.getSalaryDate()).build();
-            return new ApiResponseDTO<>(true, "국가 리스트 조회 성공", countryDTO);
+            if(country.getAvailable()) {
+                CountryDTO countryDTO = CountryDTO.builder()
+                        .school(country.getSchool())
+                        .name(country.getName())
+                        .grade(country.getGrade())
+                        .classroom(country.getClassroom())
+                        .unit(country.getUnit())
+                        .treasury(country.getTreasury())
+                        .salaryDate(country.getSalaryDate())
+                        .available(country.getAvailable())
+                        .build();
+                return new ApiResponseDTO<>(true, "국가 리스트 조회 성공", countryDTO);
+            }
+            else {
+                return new ApiResponseDTO<>(false, "비활성화된 국가입니다", null);
+            }
         } else {
-            return new ApiResponseDTO<>(false, "국가 리스트가 없습니다.", null);
+            return new ApiResponseDTO<>(false, "국가가 존재하지 않습니다", null);
         }
     }
     //1개 국가 정보 조회
     public CountryDTO findCountryInfo(Long countryId){
         Countries country = countryRepository.findById(countryId).orElseThrow();
         try {
-            return CountryDTO.builder().id(country.getId()).school(country.getSchool()).grade(country.getGrade()).classroom(country.getClassroom()).eduOfficeCode(country.getEduOfficeCode()).schoolCode(country.getSchoolCode()).build();
+            if(country.getAvailable()){
+                return CountryDTO.builder().id(country.getId()).school(country.getSchool()).grade(country.getGrade()).classroom(country.getClassroom()).eduOfficeCode(country.getEduOfficeCode()).schoolCode(country.getSchoolCode()).build();
+            }
+            else {
+                System.out.println("1개 국가 정보 조회 오류 : 비활성화된 국가입니다.");
+                return null;
+            }
         }
         catch (Exception e){
             System.out.println("1개 국가 정보 조회 오류 : "+e.getMessage());
@@ -83,9 +96,13 @@ public class CountryService {
         }
     }
 
-    //국가삭제
+    //국가삭제(비활성화)
       public ApiResponseDTO<NullType> delete(Long id){
-        countryRepository.deleteById(id);
+        Countries country = countryRepository.findById(id).orElseThrow(()->new IllegalArgumentException("국가가 존재하지 않습니다"));
+        if(country.getAvailable()){
+            country.setAvailable(false);
+            countryRepository.save(country);
+        }
         return new ApiResponseDTO<>(true,"국가 삭제 성공",null);
       }
 
@@ -94,7 +111,13 @@ public class CountryService {
         Countries country = countryRepository.findById(countryId).orElseThrow();
         CountryDTO countryDTO = null  ;
         try {
-            countryDTO = CountryDTO.builder().treasury(country.getTreasury()).build();
+            if(country.getAvailable()){
+                countryDTO = CountryDTO.builder().treasury(country.getTreasury()).build();
+            }
+            else {
+                System.out.println("국고 조회 오류 : 비활성화된 국가입니다.");
+                return countryDTO;
+            }
         }
         catch (Exception e){
             System.out.println("국고 조회 오류 : "+e.getMessage());
@@ -108,8 +131,14 @@ public class CountryService {
     public Boolean updateTreasury(Long countryId,Integer treasury){
         Countries country = countryRepository.findById(countryId).orElseThrow();
         try {
-            country.setTreasury(treasury);
-            countryRepository.save(country);
+            if(country.getAvailable()){
+                country.setTreasury(treasury);
+                countryRepository.save(country);
+            }
+            else {
+                System.out.println("국고 수정 오류 : 비활성화된 국가입니다.");
+                return false;
+            }
         }catch (Exception e){
             System.out.println("국고 수정 오류  : "  + e.getMessage());
             return false;

@@ -1,17 +1,18 @@
 package com.growup.ecountry.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.growup.ecountry.dto.AccountListDTO;
-import com.growup.ecountry.dto.ApiResponseDTO;
-import com.growup.ecountry.dto.CountryDTO;
-import com.growup.ecountry.dto.NoticeDTO;
-import com.growup.ecountry.dto.StudentDTO;
+import com.growup.ecountry.dto.*;
 import com.growup.ecountry.entity.*;
 import com.growup.ecountry.repository.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.formula.functions.Count;
 import org.aspectj.weaver.ast.Not;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,10 +26,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Date;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,27 +43,32 @@ public class StudentService {
         Optional<Countries> countryExist = countryRepository.findById(countryId);
         if(countryExist.isPresent()){
             Countries countries = countryExist.get();
-            for(StudentDTO student : students){
-                Students studentEntity = Students.builder()
-                        .name(student.getName())
-                        .rollNumber(student.getRollNumber())
-                        .pw(student.getPw())
-                        .img(student.getImg())
-                        .countryId(countries.getId())
-                        .jobId(null).build();
-                studentRepository.save(studentEntity);
-                List<AccountLists> accountInfo = accountListRepository.findByCountryIdAndDivisionAndAvailable(countryId, false, true);
-                if(!accountInfo.isEmpty()){
-                    Accounts accounts = Accounts.builder()
-                            .balance(0).accountListId(accountInfo.get(0).getId())
-                            .studentId(studentEntity.getId()).build();
-                    accountRepository.save(accounts);
+            if(countries.getAvailable()){
+                for(StudentDTO student : students){
+                    Students studentEntity = Students.builder()
+                            .name(student.getName())
+                            .rollNumber(student.getRollNumber())
+                            .pw(student.getPw())
+                            .img(student.getImg())
+                            .countryId(countries.getId())
+                            .jobId(null).build();
+                    studentRepository.save(studentEntity);
+                    List<AccountLists> accountInfo = accountListRepository.findByCountryIdAndDivisionAndAvailable(countryId, false, true);
+                    if(!accountInfo.isEmpty()){
+                        Accounts accounts = Accounts.builder()
+                                .balance(0).accountListId(accountInfo.get(0).getId())
+                                .studentId(studentEntity.getId()).build();
+                        accountRepository.save(accounts);
+                    }
+                    else {
+                        return new ApiResponseDTO<>(false,"사용 가능한 계좌 목록이 없습니다",null);
+                    }
                 }
-                else {
-                    return new ApiResponseDTO<>(false,"사용 가능한 계좌 목록이 없습니다",null);
-                }
+                return new ApiResponseDTO<>(true,"국민등록 성공",null);
             }
-            return new ApiResponseDTO<>(true,"국민등록 성공",null);
+            else {
+                return new ApiResponseDTO<>(false,"비활성화된 국가 입니다",null);
+            }
         }
         else {
             return new ApiResponseDTO<>(false,"국가가 존재하지 않습니다",null);
@@ -76,42 +79,47 @@ public class StudentService {
         Optional<Countries> countryExist = countryRepository.findById(countryId);
         if(countryExist.isPresent()){
             Countries countries = countryExist.get();
-            String fileName = file.getOriginalFilename();
-            String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-            if (!extension.equals("csv")) {
-                throw new IOException("CSV파일만 업로드 해주세요.");
-            }
-            try (InputStream inputStream = file.getInputStream();
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                 String line;
-                 reader.readLine();
+            if(countries.getAvailable()){
+                String fileName = file.getOriginalFilename();
+                String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+                if (!extension.equals("csv")) {
+                    throw new IOException("CSV파일만 업로드 해주세요.");
+                }
+                try (InputStream inputStream = file.getInputStream();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                    String line;
+                    reader.readLine();
 
-                while ((line = reader.readLine()) != null) {
-                    String[] columns = line.split(",");
-                    //columns[0]: roll number, columns[1]: name,columns[2]: password
-                    Students student = Students.builder()
-                                    .rollNumber(Integer.parseInt(columns[0]))
-                                    .name(columns[1])
-                                    .pw(columns[2])
-                                    .countryId(countries.getId())
-                                    .jobId(null).build();
-                    studentRepository.save(student);
-                    List<AccountLists> accountInfo = accountListRepository.findByCountryIdAndDivisionAndAvailable(countryId, false, true);
-                    if(!accountInfo.isEmpty()){
+                    while ((line = reader.readLine()) != null) {
+                        String[] columns = line.split(",");
+                        //columns[0]: roll number, columns[1]: name,columns[2]: password
+                        Students student = Students.builder()
+                                .rollNumber(Integer.parseInt(columns[0]))
+                                .name(columns[1])
+                                .pw(columns[2])
+                                .countryId(countries.getId())
+                                .jobId(null).build();
+                        studentRepository.save(student);
+                        List<AccountLists> accountInfo = accountListRepository.findByCountryIdAndDivisionAndAvailable(countryId, false, true);
+                        if(!accountInfo.isEmpty()){
+                            Accounts accounts = Accounts.builder()
+                                    .balance(0).accountListId(accountInfo.get(0).getId())
+                                    .studentId(student.getId()).build();
+                            accountRepository.save(accounts);
+                        }
+                        else {
+                            return new ApiResponseDTO<>(false,"사용 가능한 계좌 목록이 없습니다",null);
+                        }
                         Accounts accounts = Accounts.builder()
-                                .balance(0).accountListId(accountInfo.get(0).getId())
+                                .balance(0)
                                 .studentId(student.getId()).build();
                         accountRepository.save(accounts);
                     }
-                    else {
-                        return new ApiResponseDTO<>(false,"사용 가능한 계좌 목록이 없습니다",null);
-                    }
-                    Accounts accounts = Accounts.builder()
-                            .balance(0)
-                            .studentId(student.getId()).build();
-                    accountRepository.save(accounts);
+                    return new ApiResponseDTO<>(true,"국민등록 성공",null);
                 }
-                return new ApiResponseDTO<>(true,"국민등록 성공",null);
+            }
+            else {
+                return new ApiResponseDTO<>(false,"비활성화된 국가 입니다",null);
             }
         }
         else {
@@ -120,40 +128,54 @@ public class StudentService {
     }
     //국민조회
     public ApiResponseDTO<List<StudentDTO>> studentList(Long countryId,Boolean available){
-            List<Students> students = studentRepository.findAllByCountryIdAndAvailable(countryId, available);
-            List<StudentDTO> studentDTOList = new ArrayList<>();
-            for(Students student : students){
-                StudentDTO studentDTO = StudentDTO.builder()
-                        .id(student.getId())
-                        .name(student.getName())
-                        .rollNumber(student.getRollNumber())
-                        .rating(student.getRating())
-                        .jobId(student.getJobId())
-                        .build();
-                studentDTOList.add(studentDTO);
+        Countries countries = countryRepository.findById(countryId).orElseThrow(()->{ throw new IllegalArgumentException("존재하지 않는 국가입니다");});
+            if(countries.getAvailable()){
+                List<Students> students = studentRepository.findAllByCountryIdAndAvailable(countryId, available);
+                List<StudentDTO> studentDTOList = new ArrayList<>();
+                for(Students student : students){
+                    StudentDTO studentDTO = StudentDTO.builder()
+                            .id(student.getId())
+                            .name(student.getName())
+                            .rollNumber(student.getRollNumber())
+                            .rating(student.getRating())
+                            .jobId(student.getJobId())
+                            .build();
+                    studentDTOList.add(studentDTO);
+                }
+                return new ApiResponseDTO<>(true,"국민조회 성공",studentDTOList);
             }
-            return new ApiResponseDTO<>(true,"국민조회 성공",studentDTOList);
+            else {
+                return new ApiResponseDTO<>(false,"비활성화된 국가 입니다",null);
+            }
     }
     //국민삭제
     public ApiResponseDTO<NullType> studentDelete(Long countryId,Long id){
-        Optional<Students> studentExist = studentRepository.findByIdANDCountryId(id,countryId);
-        if(studentExist.isPresent()){
-            Students student = studentExist.get();
-            student.setAvailable(false);
-            studentRepository.save(student);
-            return new ApiResponseDTO<>(true,"국민삭제 성공",null);
+        Countries countries = countryRepository.findById(countryId).orElseThrow(()->{ throw new IllegalArgumentException("존재하지 않는 국가입니다");});
+        if(countries.getAvailable()){
+            Optional<Students> studentExist = studentRepository.findByIdANDCountryId(id,countryId);
+            if(studentExist.isPresent()){
+                Students student = studentExist.get();
+                student.setAvailable(false);
+                studentRepository.save(student);
+                return new ApiResponseDTO<>(true,"국민삭제 성공",null);
+            }
+            else {
+                return new ApiResponseDTO<>(false,"국민이 존재하지 않습니다",null);
+            }
         }
         else {
-            return new ApiResponseDTO<>(false,"국민이 존재하지 않습니다",null);
+            return new ApiResponseDTO<>(false,"비활성화된 국가 입니다",null);
         }
     }
     //국민수정
     public ApiResponseDTO<NullType> studentUpdate(Long countryId,List<StudentDTO> studentDTOs){
-        for(StudentDTO studentDTO : studentDTOs){
-            Students student = studentRepository.findByIdANDCountryId(studentDTO.getId(),countryId).orElseThrow(()->{
-                throw new IllegalArgumentException("학생 정보 혹은 국가 아이디가 존재하지 않습니다");
-            });
-            if(studentDTO.getPw() != null){
+        Countries countries = countryRepository.findById(countryId).orElseThrow(()->{ throw new IllegalArgumentException("국가가 존재하지 않습니다");});
+        if(countries.getAvailable()){
+            for(StudentDTO studentDTO : studentDTOs){
+                Students student = studentRepository.findByIdANDCountryId(studentDTO.getId(),countryId).orElseThrow(()->{
+                    throw new IllegalArgumentException("학생 정보 혹은 국가 아이디가 존재하지 않습니다");
+                });
+                if(studentDTO.getPw() != null){
                     student = Students.builder()
                             .id(studentDTO.getId())
                             .name(studentDTO.getName())
@@ -164,8 +186,8 @@ public class StudentService {
                             .jobId(studentDTO.getJobId())
                             .countryId(student.getCountryId()).build();
                     studentRepository.save(student);
-            }
-            else {
+                }
+                else {
                     student = Students.builder()
                             .id(studentDTO.getId())
                             .name(studentDTO.getName())
@@ -177,25 +199,35 @@ public class StudentService {
                             .countryId(student.getCountryId()).build();
                     studentRepository.save(student);
                 }
+            }
+            return new ApiResponseDTO<>(true,"국민수정 성공",null);
         }
-        return new ApiResponseDTO<>(true,"국민수정 성공",null);
+        else {
+            return new ApiResponseDTO<>(false,"비활성화된 국가 입니다",null);
+        }
     }
     //학생로그인
     public ApiResponseDTO<Long> studentLogin(Long countryId,StudentDTO studentDTO){
             Optional<Countries> countryExist = countryRepository.findById(countryId);
             if(countryExist.isPresent()){
-                Optional<Students> studentExist = studentRepository.findByNameANDPwANDRollNumber(studentDTO.getName(),studentDTO.getPw(),studentDTO.getRollNumber());
-                if(studentExist.isPresent()){
-                    Students students = studentExist.get();
-                    if(students.getAvailable()){
-                        return new ApiResponseDTO<>(true,"학생 로그인 성공",students.getId());
+                Countries countries = countryExist.get();
+                if(countries.getAvailable()){
+                    Optional<Students> studentExist = studentRepository.findByNameANDPwANDRollNumber(studentDTO.getName(),studentDTO.getPw(),studentDTO.getRollNumber());
+                    if(studentExist.isPresent()){
+                        Students students = studentExist.get();
+                        if(students.getAvailable()){
+                            return new ApiResponseDTO<>(true,"학생 로그인 성공",students.getId());
+                        }
+                        else {
+                            return new ApiResponseDTO<>(false,"비활성화된 계정입니다.",null);
+                        }
                     }
                     else {
-                        return new ApiResponseDTO<>(false,"비활성화된 계정입니다.",null);
+                        return new ApiResponseDTO<>(false,"사용자 정보가 일치하지 않습니다",null);
                     }
                 }
                 else {
-                    return new ApiResponseDTO<>(false,"사용자 정보가 일치하지 않습니다",null);
+                    return new ApiResponseDTO<>(false,"비활성화된 국가 입니다",null);
                 }
             }
             else {
@@ -222,10 +254,10 @@ public class StudentService {
         }
     }
     //학생이미지 수정
-    public ApiResponseDTO<NullType> studentImgUpdate(Long countryId,StudentDTO studentDTO){
+    public ApiResponseDTO<NullType> studentImgUpdate(Long countryId,Long studentId, String img) {
         String API_URL = "https://api.kakaobrain.com/v2/inference/karlo/t2i";
 
-        Optional<Students> studentExist = studentRepository.findByIdANDCountryId(studentDTO.getId(),countryId);
+        Optional<Students> studentExist = studentRepository.findByIdANDCountryId(studentId,countryId);
         if(studentExist.isPresent()){
             Students student = studentExist.get();
                 student = Students.builder()
@@ -234,10 +266,66 @@ public class StudentService {
                         .rollNumber(student.getRollNumber())
                         .pw(student.getPw())
                         .rating(student.getRating())
+                        .available(student.getAvailable())
                         .countryId(student.getCountryId())
-                        .img(studentDTO.getImg()).build();
-                studentRepository.save(student);
-                return new ApiResponseDTO<>(true,"이미지 변경 성공",null);
+                        .img(img).build();
+                //유직
+                if(student.getJobId() != null){
+                    Jobs studentJob = jobRepository.findById(student.getJobId()).get();
+                    Map<String, Object> requestData = new HashMap<>();
+                    requestData.put("version", "v2.1");
+                    requestData.put("prompt", "A photorealistic image of job as of job as " + studentJob.getName() + "that looks modern and professional.");
+                    requestData.put("height", 1024);
+                    requestData.put("width", 1024);
+
+                    HttpHeaders headers = new HttpHeaders();
+                    String rest_api_key = System.getenv("KAKAO_REST_API_KEY");
+                    headers.set("Authorization", "KakaoAK " + rest_api_key);
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+
+                    HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestData, headers);
+                    ResponseEntity<KakaoResponse> responseEntity = restTemplate.postForEntity(API_URL, requestEntity, KakaoResponse.class);
+                    String imgUrl = null;
+                    if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                        imgUrl = responseEntity.getBody().getImages().get(0).getImage();
+                        student.setJobImg(imgUrl);
+                        studentRepository.save(student);
+                        return new ApiResponseDTO<>(true,"이미지 + 직업 이미지 변경 성공",null);
+                    } else {
+                        // 이부분은 카카오 api 오류 발생 시 예외처리
+                        student.setJobImg(null);
+                        studentRepository.save(student);
+                        return new ApiResponseDTO<>(true,"이미지 변경 성공",null);
+                    }
+                } // 무직
+                else {
+                    Map<String, Object> requestData = new HashMap<>();
+                    requestData.put("version", "v2.1");
+                    requestData.put("prompt", "A photorealistic image of school interior that looks modern and school-like.");
+                    requestData.put("negative_prompt", "human");
+                    requestData.put("height", 1024);
+                    requestData.put("width", 1024);
+
+                    HttpHeaders headers = new HttpHeaders();
+                    String rest_api_key = System.getenv("KAKAO_REST_API_KEY");
+                    headers.set("Authorization", "KakaoAK " + rest_api_key);
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+
+                    HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestData, headers);
+                    ResponseEntity<KakaoResponse> responseEntity = restTemplate.postForEntity(API_URL, requestEntity, KakaoResponse.class);
+                    String imgUrl = null;
+                    if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                        imgUrl = responseEntity.getBody().getImages().get(0).getImage();
+                        student.setJobImg(imgUrl);
+                        studentRepository.save(student);
+                        return new ApiResponseDTO<>(true,"이미지 + 직업 이미지 변경 성공",null);
+                    } else {
+                        // 이부분은 카카오 api 오류 발생 시 예외처리
+                        student.setJobImg(imgUrl);
+                        studentRepository.save(student);
+                        return new ApiResponseDTO<>(true,"이미지 변경 성공",null);
+                    }
+                }
         }
         else {
             return new ApiResponseDTO<>(false,"국민이 존재하지 않습니다",null);

@@ -29,7 +29,7 @@ public class CountryController {
                 CountryDTO countryDTO = apiData.getResult();
                 return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(),apiData.getMessage(), setCountryData(countryDTO)));
         } catch (Exception e) {
-            return ResponseEntity.ok(new ApiResponseDTO<>(false,e.getMessage()));
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"국가 정보 조회 실패"));
         }
     }
 
@@ -50,9 +50,9 @@ public class CountryController {
         }
      }
 
-    //국가삭제
+    //국가삭제(비활성화)
      @DeleteMapping("/{id}")
-     public ResponseEntity<ApiResponseDTO<NullType>> delete(@PathVariable Long id){
+     public ResponseEntity<ApiResponseDTO<NullType>> delete(@PathVariable("id") Long id){
         try{
             return ResponseEntity.ok(countryService.delete(id));
         } catch (Exception e) {
@@ -62,7 +62,7 @@ public class CountryController {
 
     //국고 수정
     @PatchMapping("/treasury/{countryId}")
-    public ResponseEntity<ApiResponseDTO<NullType>> updateTreasury(@PathVariable Long countryId,@RequestBody CountryDTO countryDTO){
+    public ResponseEntity<ApiResponseDTO<NullType>> updateTreasury(@PathVariable("countryId") Long countryId,@RequestBody CountryDTO countryDTO){
         boolean success = countryService.updateTreasury(countryId, countryDTO.getTreasury());
         String msg = success ? "국고 수정에 성공하였습니다." : "국고 수정에 실패하였습니다.";
         return ResponseEntity.ok(new ApiResponseDTO<NullType>(success, msg));

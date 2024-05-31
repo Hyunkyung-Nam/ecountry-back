@@ -3,7 +3,9 @@ package com.growup.ecountry.controller;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.growup.ecountry.config.TokenProvider;
 import com.growup.ecountry.dto.*;
+import com.growup.ecountry.entity.Countries;
 import com.growup.ecountry.entity.Jobs;
+import com.growup.ecountry.repository.CountryRepository;
 import com.growup.ecountry.repository.JobRepository;
 import com.growup.ecountry.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final CountryRepository countryRepository;
     private final JobRepository jobRepository;
     private final TokenProvider jwt;
 
@@ -87,6 +90,17 @@ public class UserController {
             return ResponseEntity.ok(new ApiResponseDTO<>(true, "사용자 인증 완료", authToken));
         }
     }
+    //국가 인증
+    @GetMapping("/country/auth/{countryId}")
+    public ResponseEntity<ApiResponseDTO<NullType>> authCountry(@PathVariable("countryId") Long countryId) {
+        Countries countries = countryRepository.findById(countryId).orElseThrow(() -> new IllegalArgumentException("국가가 존재하지 않습니다"));
+        if(countries.getAvailable()){
+            return ResponseEntity.ok(new ApiResponseDTO<>(true,"국가 인증 완료",null));
+        }
+        else {
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"국가 인증 실패 : 비활성화된 국가입니다",null));
+        }
+    }
 
     @PatchMapping("/change")
     public ResponseEntity<ApiResponseDTO<NullType>> pwUpdate(@RequestHeader(value= "Authorization") String token, @RequestBody UserDTO userDTO) {
@@ -100,6 +114,18 @@ public class UserController {
             return ResponseEntity.ok(new ApiResponseDTO<>(false,"비밀번호 변경에 실패하였습니다",null));
         } catch (Exception e) {
             return ResponseEntity.ok(new ApiResponseDTO<>(false,"비밀번호 변경에 실패하였습니다",null));
+        }
+    }
+    @PostMapping("/delete")
+    public ResponseEntity<ApiResponseDTO<NullType>> deleteUser(@RequestHeader(value= "Authorization") String token) {
+        try {
+            TokenDTO authToken = jwt.validateToken(token);
+            if(authToken.getId() != 0){
+                return ResponseEntity.ok(userService.deleteUser(authToken.getId()));
+            }
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"유저 삭제에 실패하였습니다",null));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"유저 삭제에 실패하였습니다",null));
         }
     }
 
@@ -126,10 +152,10 @@ public class UserController {
                 return ResponseEntity.ok(userService.findCountryList(id));
             }
             else {
-                return ResponseEntity.ok(new ApiResponseDTO<>(false,"국가리스트조회 실패",null));
+                return ResponseEntity.ok(new ApiResponseDTO<>(false,"국가리스트 조회 실패",null));
             }
         } catch (Exception e) {
-            return ResponseEntity.ok(new ApiResponseDTO<>(false,"국가리스트조회 실패",null));
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"국가리스트 조회 실패",null));
         }
     }
 

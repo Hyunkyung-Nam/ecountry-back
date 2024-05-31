@@ -33,30 +33,35 @@ public class SeatStatusController {
     public ResponseEntity<ApiResponseDTO<List<SeatStatusData>>> getStatus2(@PathVariable("countryId") Long countryId){
         try {
                 ApiResponseDTO<List<SeatStatusDTO>> apiData = seatStatusService.getSeatStatus2(countryId);
-                List<SeatStatusDTO> seatStatusDTOS = apiData.getResult();
-                List<SeatStatusData> seatStatusDataList = new ArrayList<>();
-                for(SeatStatusDTO seatStatusDTO : seatStatusDTOS) {
-                    SeatStatusData seatStatusData = SeatStatusData.builder()
-                            .id(seatStatusDTO.getId())
-                            .rowNum(seatStatusDTO.getRowNum())
-                            .colNum(seatStatusDTO.getColNum())
-                            .ownerId(null)
-                            .studentId(null)
-                            .ownerName(null)
-                            .studentName(null).build();
-                    if(seatStatusDTO.getOwnerId() != null){
-                        Students ownerStudent = studentRepository.findById(seatStatusDTO.getOwnerId()).orElseThrow(() -> new RuntimeException("학생이 존재하지 않습니다"));
-                        seatStatusData.setOwnerId(ownerStudent.getId());
-                        seatStatusData.setOwnerName(ownerStudent.getName());
+                if(apiData.getResult() != null ){
+                    List<SeatStatusDTO> seatStatusDTOS = apiData.getResult();
+                    List<SeatStatusData> seatStatusDataList = new ArrayList<>();
+                    for(SeatStatusDTO seatStatusDTO : seatStatusDTOS) {
+                        SeatStatusData seatStatusData = SeatStatusData.builder()
+                                .id(seatStatusDTO.getId())
+                                .rowNum(seatStatusDTO.getRowNum())
+                                .colNum(seatStatusDTO.getColNum())
+                                .ownerId(null)
+                                .studentId(null)
+                                .ownerName(null)
+                                .studentName(null).build();
+                        if(seatStatusDTO.getOwnerId() != null){
+                            Students ownerStudent = studentRepository.findById(seatStatusDTO.getOwnerId()).orElseThrow(() -> new RuntimeException("학생이 존재하지 않습니다"));
+                            seatStatusData.setOwnerId(ownerStudent.getId());
+                            seatStatusData.setOwnerName(ownerStudent.getName());
+                        }
+                        if(seatStatusDTO.getStudentId() != null){
+                            Students student = studentRepository.findById(seatStatusDTO.getStudentId()).orElseThrow(() -> new RuntimeException("학생이 존재하지 않습니다"));
+                            seatStatusData.setStudentId(student.getId());
+                            seatStatusData.setStudentName(student.getName());
+                        }
+                        seatStatusDataList.add(seatStatusData);
                     }
-                    if(seatStatusDTO.getStudentId() != null){
-                        Students student = studentRepository.findById(seatStatusDTO.getStudentId()).orElseThrow(() -> new RuntimeException("학생이 존재하지 않습니다"));
-                        seatStatusData.setStudentId(student.getId());
-                        seatStatusData.setStudentName(student.getName());
-                    }
-                    seatStatusDataList.add(seatStatusData);
+                    return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(),apiData.getMessage(),seatStatusDataList));
                 }
-                return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(),apiData.getMessage(),seatStatusDataList));
+                else {
+                    return ResponseEntity.ok(new ApiResponseDTO<>(false, "비활성화된 국가입니다",null));
+                }
         } catch (Exception e) {
             return ResponseEntity.ok(new ApiResponseDTO<>(false, "사용자 인증에 실패하였습니다",null));
         }

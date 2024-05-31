@@ -14,4 +14,5 @@ public class UserDTO {
     private String userId;
     private String pw;
     private String img;
+    private Boolean available;
 }
