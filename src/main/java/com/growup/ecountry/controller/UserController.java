@@ -116,6 +116,7 @@ public class UserController {
             return ResponseEntity.ok(new ApiResponseDTO<>(false,"비밀번호 변경에 실패하였습니다",null));
         }
     }
+    //회원탈퇴
     @PostMapping("/delete")
     public ResponseEntity<ApiResponseDTO<NullType>> deleteUser(@RequestHeader(value= "Authorization") String token) {
         try {

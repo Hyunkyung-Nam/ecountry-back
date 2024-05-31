@@ -212,7 +212,7 @@ public class StudentService {
             if(countryExist.isPresent()){
                 Countries countries = countryExist.get();
                 if(countries.getAvailable()){
-                    Optional<Students> studentExist = studentRepository.findByNameANDPwANDRollNumber(studentDTO.getName(),studentDTO.getPw(),studentDTO.getRollNumber());
+                    Optional<Students> studentExist = studentRepository.findByNameANDPwANDRollNumberANDCountryId(studentDTO.getName(),studentDTO.getPw(),studentDTO.getRollNumber(), countries.getId());
                     if(studentExist.isPresent()){
                         Students students = studentExist.get();
                         if(students.getAvailable()){
@@ -245,6 +245,7 @@ public class StudentService {
                     .rollNumber(student.getRollNumber())
                     .pw(studentDTO.getPw())
                     .rating(student.getRating())
+                    .available(student.getAvailable())
                     .countryId(student.getCountryId()).build();
             studentRepository.save(student);
             return new ApiResponseDTO<>(true,"비밀번호 변경 성공",null);
@@ -274,7 +275,7 @@ public class StudentService {
                     Jobs studentJob = jobRepository.findById(student.getJobId()).get();
                     Map<String, Object> requestData = new HashMap<>();
                     requestData.put("version", "v2.1");
-                    requestData.put("prompt", "A photorealistic image of job as of job as " + studentJob.getName() + "that looks modern and professional.");
+                    requestData.put("prompt", "A photorealistic image of job as " + studentJob.getName() + "that looks modern and professional.");
                     requestData.put("height", 1024);
                     requestData.put("width", 1024);
 
@@ -383,6 +384,18 @@ public class StudentService {
         else {
             return new ApiResponseDTO<>(false,"알림 발송에 실패하였습니다",null);
         }
+    }
+    //알림개수 확인
+    public ApiResponseDTO<Integer> noticeCount(Long studentId){
+        Students student = studentRepository.findById(studentId).orElseThrow(()->new IllegalArgumentException("학생이 존재하지 않습니다"));
+        List<Notice> notices = noticeRepository.findAllByStudentId(student.getId());
+        Integer count = 0;
+        for(Notice notice : notices){
+            if(notice.getIsChecked() == false){
+                count += 1;
+            }
+        }
+        return new ApiResponseDTO<>(true,"알림 개수",count);
     }
     //학생 신용등급 수정
     public boolean updateRating(StudentDTO studentDTO){

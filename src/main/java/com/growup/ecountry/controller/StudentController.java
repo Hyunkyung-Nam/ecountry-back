@@ -132,7 +132,22 @@ public class StudentController {
     public ResponseEntity<ApiResponseDTO<NullType>> noticeAdd(@PathVariable Long countryId,@RequestBody NoticeDTO noticeDTO){
         return ResponseEntity.ok(studentService.noticeAdd(countryId,noticeDTO));
     }
-
+    //알림개수 확인
+    @GetMapping("/notice/count")
+    public ResponseEntity<ApiResponseDTO<NoticeCount>> noticeCount(@RequestHeader("Authorization") String token){
+        try {
+            TokenDTO authToken = jwt.validateToken(token);
+            if(authToken != null){
+                ApiResponseDTO<Integer> apiData = studentService.noticeCount(authToken.getId());
+                return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(), apiData.getMessage(),new NoticeCount(apiData.getResult())));
+            }
+            else {
+                return ResponseEntity.ok(new ApiResponseDTO<>(false,"사용자 인증에 실패하였습니다",null));
+            }
+        } catch(Exception e) {
+            return ResponseEntity.ok(new ApiResponseDTO<>(false,"사용자 인증에 실패하였습니다",null));
+        }
+    }
     //학생 신용등급 수정
     @PatchMapping("/rating")
     public ResponseEntity<ApiResponseDTO<NullType>> updateRating(@RequestBody StudentDTO studentDTO){
@@ -187,6 +202,13 @@ public class StudentController {
             this.content = content;
             this.isChecked = isChecked;
             this.createAt = createAt;
+        }
+    }
+    static class NoticeCount {
+        @JsonProperty
+        private final Integer count;
+        public NoticeCount(Integer count) {
+            this.count = count;
         }
     }
     //토큰 발급

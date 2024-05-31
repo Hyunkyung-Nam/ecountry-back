@@ -63,7 +63,7 @@ public class SeatStatusController {
                     return ResponseEntity.ok(new ApiResponseDTO<>(false, "비활성화된 국가입니다",null));
                 }
         } catch (Exception e) {
-            return ResponseEntity.ok(new ApiResponseDTO<>(false, "사용자 인증에 실패하였습니다",null));
+            return ResponseEntity.ok(new ApiResponseDTO<>(false, e.getMessage(),null));
         }
     }
     //자리 사용 현황 수정

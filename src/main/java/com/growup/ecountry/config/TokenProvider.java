@@ -1,7 +1,6 @@
 package com.growup.ecountry.config;
 
 import com.growup.ecountry.dto.TokenDTO;
-import com.growup.ecountry.dto.UserDTO;
 import com.growup.ecountry.entity.Students;
 import com.growup.ecountry.entity.Users;
 import com.growup.ecountry.repository.StudentRepository;
@@ -11,8 +10,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.HashMap;
