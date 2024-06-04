@@ -7,6 +7,7 @@ import com.growup.ecountry.entity.Countries;
 import com.growup.ecountry.entity.Jobs;
 import com.growup.ecountry.repository.CountryRepository;
 import com.growup.ecountry.repository.JobRepository;
+import com.growup.ecountry.service.StudentService;
 import com.growup.ecountry.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import javax.lang.model.type.NullType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +25,7 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final CountryRepository countryRepository;
+    private final StudentService studentService;
     private final JobRepository jobRepository;
     private final TokenProvider jwt;
 
@@ -82,12 +85,20 @@ public class UserController {
     }
 
     @GetMapping("/auth")
-    public ResponseEntity<ApiResponseDTO<TokenDTO>> authUser(@RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<ApiResponseDTO<AuthData>> authUser(@RequestHeader(value = "Authorization") String token) {
         TokenDTO authToken = jwt.validateToken(token);
         if(authToken.getId() == 0) {
             return ResponseEntity.ok(new ApiResponseDTO<>(false, "사용자 인증 실패", null));
         } else {
-            return ResponseEntity.ok(new ApiResponseDTO<>(true, "사용자 인증 완료", authToken));
+            if(authToken.getIsStudent()) {
+                System.out.println(new AuthData(authToken.getId(), true, studentService.findStudent(authToken.getId())));
+                return ResponseEntity.ok(new ApiResponseDTO<>(true, "사용자 인증 완료", new AuthData(authToken.getId(), true, studentService.findStudent(authToken.getId()))));
+            } else {
+                System.out.println("teacher");
+                System.out.println(new AuthData(authToken.getId(), false, userService.findCountryId(authToken.getId())));
+                return ResponseEntity.ok(new ApiResponseDTO<>(true, "사용자 인증 완료", new AuthData(authToken.getId(), false, userService.findCountryId(authToken.getId()))));
+            }
+//            return ResponseEntity.ok(new ApiResponseDTO<>(true, "사용자 인증 완료", authToken));
         }
     }
     //국가 인증
@@ -223,6 +234,21 @@ public class UserController {
             this.jobId = jobId;
             this.countryId = countryId;
             this.skills = skills;
+        }
+    }
+
+
+    static class AuthData {
+        @JsonProperty
+        private final Long id;
+        @JsonProperty
+        private final Boolean isStudent;
+        @JsonProperty
+        private final List<Long> countryList;
+        public AuthData(Long id, Boolean isStudent, List<Long> countryList){
+            this.id = id;
+            this.isStudent = isStudent;
+            this.countryList = countryList;
         }
     }
 }

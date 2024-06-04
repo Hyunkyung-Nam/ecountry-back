@@ -195,4 +195,12 @@ public class UserService {
                 return new ApiResponseDTO<>(false,"유저 데이터를 찾을 수 없습니다",null);
         }
     }
+
+//    국가 id만 조회
+    public List<Long> findCountryId(Long id) {
+        List<Long> result = new ArrayList<>();
+        List<Countries> countriesList = countryRepository.findAllByUserId(id);
+        countriesList.forEach(data->result.add(data.getId()));
+        return result;
+    }
 }

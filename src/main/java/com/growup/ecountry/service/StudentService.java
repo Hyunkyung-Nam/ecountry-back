@@ -423,5 +423,12 @@ public class StudentService {
         }
         return true;
     }
+//    학생 국가 조회
+    public List<Long> findStudent(Long id) {
+        Optional<Students> students = studentRepository.findById(id);
+        List<Long> countryList = new ArrayList<>();
+        students.ifPresent(value -> countryList.add(value.getCountryId()));
+        return countryList;
+    }
 }
 
