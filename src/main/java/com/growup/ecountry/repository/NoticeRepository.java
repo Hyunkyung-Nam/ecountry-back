@@ -10,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
-    @Query("select n from Notice n where n.studentId = :studentId")
+    @Query("select n from Notice n where n.studentId = :studentId order by n.createdAt desc")
     List<Notice> findAllByStudentId(@Param("studentId") Long studentId);
 }

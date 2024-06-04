@@ -7,7 +7,9 @@ import com.growup.ecountry.dto.NoticeDTO;
 import com.growup.ecountry.dto.StudentDTO;
 import com.growup.ecountry.dto.TokenDTO;
 import com.growup.ecountry.entity.Jobs;
+import com.growup.ecountry.entity.Notice;
 import com.growup.ecountry.repository.JobRepository;
+import com.growup.ecountry.repository.NoticeRepository;
 import com.growup.ecountry.service.StudentService;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StudentController {
     private final StudentService studentService;
+    private final NoticeRepository noticeRepository;
     private final JobRepository jobRepository;
     private final TokenProvider jwt;
 
@@ -96,10 +99,10 @@ public class StudentController {
     }
     //학생이미지 수정
     @PatchMapping("/user/img/{countryId}")
-    public ResponseEntity<ApiResponseDTO<NullType>> studentImgUpdate(@PathVariable("countryId") Long countryId,@RequestHeader("Authorization") String token,@RequestParam("img")String img) {
+    public ResponseEntity<ApiResponseDTO<NullType>> studentImgUpdate(@PathVariable("countryId") Long countryId,@RequestHeader("Authorization") String token,@RequestBody StudentDTO studentDTO) {
         TokenDTO authToken = jwt.validateToken(token);
         if(authToken != null && authToken.getIsStudent()) {
-            return ResponseEntity.ok(studentService.studentImgUpdate(countryId,authToken.getId(),img));
+            return ResponseEntity.ok(studentService.studentImgUpdate(countryId,authToken.getId(),studentDTO.getImg()));
         }
         else {
             return ResponseEntity.ok(new ApiResponseDTO<>(false,"학생만 이용가능 합니다",null));
@@ -115,8 +118,11 @@ public class StudentController {
             List<NoticeDTO> notices = apiData.getResult();
             for(NoticeDTO notice : notices) {
                 if(notice.getIsChecked() == false){
-                    NoticeData noticeData = new NoticeData(notice.getId(), notice.getContent(), 1, notice.getCreatedAt());
+                    NoticeData noticeData = new NoticeData(notice.getId(), notice.getContent(), 0, notice.getCreatedAt());
                     noticeDataList.add(noticeData);
+                    Notice notice1 = noticeRepository.findById(notice.getId()).orElseThrow(()->new IllegalArgumentException("알림이 존재하지 않습니다"));
+                    notice1.setIsChecked(true);
+                    noticeRepository.save(notice1);
                 }
                 else { // 이미 조회한걸 다시 보는 경우
                     NoticeData noticeData = new NoticeData(notice.getId(), notice.getContent(), 1, notice.getCreatedAt());
@@ -127,10 +133,14 @@ public class StudentController {
         }
             return ResponseEntity.ok(new ApiResponseDTO<>(false,"사용자 인증에 실패하였습니다",noticeDataList));
     }
-    //알림추가
+    //알림추가(전체 국민한테 한꺼번에 보내는 api도 추가 countryId 받으면 그걸로 studentid 조회해서 메시지로 하나추가
     @PostMapping("/notice/add/{countryId}")
-    public ResponseEntity<ApiResponseDTO<NullType>> noticeAdd(@PathVariable Long countryId,@RequestBody NoticeDTO noticeDTO){
+    public ResponseEntity<ApiResponseDTO<NullType>> noticeAdd(@PathVariable("countryId") Long countryId,@RequestBody NoticeDTO noticeDTO){
         return ResponseEntity.ok(studentService.noticeAdd(countryId,noticeDTO));
+    }
+    @PostMapping("notice/add/all/{countryId}")
+    public ResponseEntity<ApiResponseDTO<NullType>> noticeAll(@PathVariable("countryId") Long countryId,@RequestBody NoticeDTO noticeDTO){
+        return ResponseEntity.ok(studentService.noticeAddAll(countryId,noticeDTO));
     }
     //알림개수 확인
     @GetMapping("/notice/count")
@@ -196,12 +206,12 @@ public class StudentController {
         @JsonProperty
         private final Integer isChecked;
         @JsonProperty
-        private final Date createAt;
-        public NoticeData(Long id, String content, Integer isChecked, Date createAt) {
+        private final Date createdAt;
+        public NoticeData(Long id, String content, Integer isChecked, Date createdAt) {
             this.id = id;
             this.content = content;
             this.isChecked = isChecked;
-            this.createAt = createAt;
+            this.createdAt = createdAt;
         }
     }
     static class NoticeCount {

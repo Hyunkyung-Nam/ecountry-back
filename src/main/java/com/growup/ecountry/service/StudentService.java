@@ -364,7 +364,7 @@ public class StudentService {
             return new ApiResponseDTO<>(false,"알림 조회 실패: 국민이 존재하지 않습니다",null);
         }
     }
-    //알림추가(국가ID?)
+    //알림추가
     public ApiResponseDTO<NullType> noticeAdd(Long countryId,NoticeDTO noticeDTO){
         Optional<Countries> countryExist = countryRepository.findById(countryId);
         if(countryExist.isPresent()){
@@ -384,6 +384,20 @@ public class StudentService {
         else {
             return new ApiResponseDTO<>(false,"알림 발송에 실패하였습니다",null);
         }
+    }
+    //국민 전체에게 알림 추가
+    public ApiResponseDTO<NullType> noticeAddAll(Long countryId,NoticeDTO noticeDTO){
+        List<Students> studentList = studentRepository.findAllByCountryId(countryId);
+        for(Students student : studentList){
+            if(student.getAvailable()){
+                Notice notice = Notice.builder()
+                        .content(noticeDTO.getContent())
+                        .studentId(student.getId())
+                        .build();
+                noticeRepository.save(notice);
+            }
+        }
+        return new ApiResponseDTO<>(true,"국민 전체에게 알림 추가 성공",null);
     }
     //알림개수 확인
     public ApiResponseDTO<Integer> noticeCount(Long studentId){
