@@ -184,6 +184,7 @@ public class StudentService {
                             .available(student.getAvailable())
                             .rating(studentDTO.getRating())
                             .jobId(studentDTO.getJobId())
+                            .img(studentDTO.getImg())
                             .countryId(student.getCountryId()).build();
                     studentRepository.save(student);
                 }
@@ -269,6 +270,7 @@ public class StudentService {
                         .rating(student.getRating())
                         .available(student.getAvailable())
                         .countryId(student.getCountryId())
+                        .jobId(student.getJobId())
                         .img(img).build();
                 //유직
                 if(student.getJobId() != null){

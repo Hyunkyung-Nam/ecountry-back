@@ -106,6 +106,7 @@ public class PostController {
 
         TokenDTO authToken = jwt.validateToken(token);
         if(authToken.getIsStudent() ) {
+            System.out.println("id : "+ authToken.getId());
             petitionDTO.setWriterId(authToken.getId());
         } else {
             petitionDTO.setWriterId(null);

@@ -127,6 +127,8 @@ public class UserService {
                     .id(user.getId())
                     .name(user.getName())
                     .userId(user.getUserId())
+                    .img(user.getImg())
+                    .available(user.getAvailable())
                     .pw(pw).build(); // 비밀번호 변경
             userRepository.save(user);
             return true;
@@ -158,6 +160,7 @@ public class UserService {
                     .name(user.getName())
                     .userId(user.getUserId())
                     .pw(user.getPw())
+                    .available(user.getAvailable())
                     .img(userDTO.getImg())
                     .build();
             userRepository.save(user);
