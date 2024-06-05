@@ -31,7 +31,7 @@ public class AccountController {
     }
 
     @GetMapping("/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<AccountListDTO>>> getList(@PathVariable Long countryId) {
+    public ResponseEntity<ApiResponseDTO<List<AccountListDTO>>> getList(@PathVariable("countryId") Long countryId) {
         try {
             List<AccountListDTO> result = accountService.getList(countryId, true, true);
             return ResponseEntity.ok(new ApiResponseDTO<>(true, "개설 가능 적금 통장 조회 완료", result));
@@ -51,7 +51,7 @@ public class AccountController {
     }
 
     @PatchMapping("/delete/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> disableList(@PathVariable Long id) {
+    public ResponseEntity<ApiResponseDTO<NullType>> disableList(@PathVariable("id") Long id) {
         try {
             accountService.disableList(id);
             return ResponseEntity.ok(new ApiResponseDTO<>(true, "적금 통장 비활성화 완료"));

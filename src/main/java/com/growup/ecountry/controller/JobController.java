@@ -30,13 +30,13 @@ public class JobController {
 
     //직업리스트 조회
     @GetMapping("/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<JobService.JobResponseData>>> findAllJob(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<List<JobService.JobResponseData>>> findAllJob(@PathVariable("countryId") Long countryId){
         return ResponseEntity.ok(new ApiResponseDTO<List<JobService.JobResponseData>>(true, "직업조회에 성공하였습니다.",jobService.findAllJobs(countryId)));
     }
 
     //직업리스트 1개 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> deleteJob(@PathVariable Long id){
+    public ResponseEntity<ApiResponseDTO<NullType>> deleteJob(@PathVariable("id") Long id){
         boolean success = jobService.deleteJob(id);
         String msg = success ? "직업리스트 1개 삭제에 성공하였습니다." : "직업리스트 1개 삭제에 실패하였습니다.";
         return ResponseEntity.ok(new ApiResponseDTO<NullType>(success,msg));

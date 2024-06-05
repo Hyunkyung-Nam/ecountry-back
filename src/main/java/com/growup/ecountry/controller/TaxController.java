@@ -34,7 +34,7 @@ public class TaxController {
     }
     //세금리스트 조회
     @GetMapping("/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<FindAllTaxes>>> findAllTaxes(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<List<FindAllTaxes>>> findAllTaxes(@PathVariable("countryId") Long countryId){
         List<TaxDTO> taxDTOList = taxService.findAllTaxes(countryId);
         String msg = taxDTOList != null ? "세금리스트 조회에 성공하였습니다." : "세금리스트 조회에 실패하였습니다.";
         boolean success = false;
@@ -69,7 +69,7 @@ public class TaxController {
     }
     //국고 조회
     @GetMapping("/treasury/{countryId}")
-    public ResponseEntity<ApiResponseDTO<?>> findTreasury(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<?>> findTreasury(@PathVariable("countryId") Long countryId){
         CountryDTO countryDTO = countryService.findTreasury(countryId);
         if(countryDTO == null){
             return ResponseEntity.ok(new ApiResponseDTO<NullType>(false, "국고 조회에 실패하였습니다."));
@@ -80,7 +80,7 @@ public class TaxController {
     }
     //과태료 조회
     @GetMapping("/penalty/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<Penalty>>> findAllPenaltyList(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<List<Penalty>>> findAllPenaltyList(@PathVariable("countryId") Long countryId){
         try {
             List<Penalty> penalties = taxService.findPenalty(countryId).stream().map(penalty -> Penalty.builder().id(penalty.getId()).withdrawId(penalty.getWithdrawId()).memo(penalty.getMemo()).createdAt(penalty.getCreatedAt()).transaction(penalty.getTransaction()).build()).toList();
             return ResponseEntity.ok(new ApiResponseDTO<List<Penalty>>(true, "과태료 조회에 성공하였습니다.", penalties));
@@ -92,7 +92,7 @@ public class TaxController {
     }
     //과태료 리스트 조회
     @GetMapping("/penalty/list/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<TaxService.PenaltyList>>> findPenaltyList(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<List<TaxService.PenaltyList>>> findPenaltyList(@PathVariable("countryId") Long countryId){
             List<TaxService.PenaltyList> penaltyList = taxService.findPenaltyList(countryId);
             if(penaltyList != null) {
                 return ResponseEntity.ok(new ApiResponseDTO<List<TaxService.PenaltyList>>(true, "과태료 리스트조회에 성공하였습니다.", penaltyList));
@@ -103,7 +103,7 @@ public class TaxController {
 
     //과태료 부과
     @PostMapping("/penalty/{countryId}")
-    public ResponseEntity<ApiResponseDTO<NullType>> imposePenalty(@PathVariable Long countryId, @RequestBody BankDTO bankDTO){
+    public ResponseEntity<ApiResponseDTO<NullType>> imposePenalty(@PathVariable("countryId") Long countryId, @RequestBody BankDTO bankDTO){
         boolean success = taxService.imposePenalty(countryId, bankDTO);
         String msg = success ? "과태료 부과에 성공하였습니다." : "과태료 부과에 실패하였습니다.";
 
@@ -112,7 +112,7 @@ public class TaxController {
 
     //과태료 삭제
     @DeleteMapping("/penalty/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> deletePenalty(@PathVariable Long id){
+    public ResponseEntity<ApiResponseDTO<NullType>> deletePenalty(@PathVariable("id") Long id){
         boolean success = taxService.deletePenalty(id);
         String msg = success ? "과태료 삭제에 성공하였습니다." : "과태료 삭제에 실패하였습니다.";
 

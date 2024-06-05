@@ -30,7 +30,7 @@ public class InvestController {
     }
 
     @GetMapping("/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<InvestDTO>>> getInvest(@PathVariable Long countryId) {
+    public ResponseEntity<ApiResponseDTO<List<InvestDTO>>> getInvest(@PathVariable("countryId") Long countryId) {
         try {
             List<InvestDTO> result = investService.getInvest(countryId);
             return ResponseEntity.ok(new ApiResponseDTO<>(true,"투자 항목 조회 완료", result));
@@ -40,7 +40,7 @@ public class InvestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> deleteInvest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponseDTO<NullType>> deleteInvest(@PathVariable("id") Long id) {
         try {
             investService.deleteInvest(id);
             return ResponseEntity.ok(new ApiResponseDTO<NullType>(true, "투자 항목 삭제 완료"));
@@ -61,7 +61,7 @@ public class InvestController {
 
 //    투자 현황
     @GetMapping("/status/{investId}")
-    public ResponseEntity<ApiResponseDTO<List<InvestStatusDTO>>> getStatus(@PathVariable Long investId) {
+    public ResponseEntity<ApiResponseDTO<List<InvestStatusDTO>>> getStatus(@PathVariable("countryId") Long investId) {
         try {
             List<InvestStatusDTO> result = investService.getStatus(investId);
             return ResponseEntity.ok(new ApiResponseDTO<List<InvestStatusDTO>>(true, "투자 현황 조회 완료", result));
@@ -83,7 +83,7 @@ public class InvestController {
     }
     
     @DeleteMapping("/status/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> deleteStatus(@PathVariable Long id) {
+    public ResponseEntity<ApiResponseDTO<NullType>> deleteStatus(@PathVariable("id") Long id) {
         try {
             investService.deleteStatus(id);
             return ResponseEntity.ok(new ApiResponseDTO<NullType>(true, "투자 정보 삭제 완료"));

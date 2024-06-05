@@ -28,7 +28,7 @@ public class RuleController {
     }
     //규칙리스트 조회
     @GetMapping("/{countryId}")
-    public ResponseEntity<FindAllRuleResponse> findAllRules(@PathVariable Long countryId){
+    public ResponseEntity<FindAllRuleResponse> findAllRules(@PathVariable("countryId") Long countryId){
         List<RuleDTO> ruleDTOList = ruleService.findAllRules(countryId);
         String msg = ruleDTOList != null ? "규칙조회에 성공하였습니다." : "규칙조회에 실패하였습니다.";
         Boolean success = false;

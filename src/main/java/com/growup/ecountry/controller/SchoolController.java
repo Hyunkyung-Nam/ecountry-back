@@ -19,14 +19,14 @@ public class SchoolController {
 
     //학교 정보 조회
     @GetMapping
-    public ResponseEntity<ApiResponseDTO<?>> getSchoolInfo(@RequestParam String schoolName){
+    public ResponseEntity<ApiResponseDTO<?>> getSchoolInfo(@RequestParam(name = "schoolName",required = false) String schoolName){
 
         return ResponseEntity.ok(new ApiResponseDTO<>(true, "",schoolService.schoolInfoSearchAPI(schoolName)));
     }
 
     //급식정보 조회
     @GetMapping("/menu/{countryId}")
-    public ResponseEntity<ApiResponseDTO<?>> getSchoolMenu(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<?>> getSchoolMenu(@PathVariable("countryId") Long countryId){
         try {
             CountryDTO countryDTO = countryService.findCountryInfo(countryId);
             if(countryDTO == null){
@@ -40,7 +40,7 @@ public class SchoolController {
     }
     //학교 시간표 검색
     @GetMapping("/timetable/{countryId}")
-    public ResponseEntity<ApiResponseDTO<?>> getSchoolTimeTable(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<?>> getSchoolTimeTable(@PathVariable("countryId") Long countryId){
         try {
             CountryDTO countryDTO = countryService.findCountryInfo(countryId);
             if(countryDTO == null){

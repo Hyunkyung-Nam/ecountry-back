@@ -127,6 +127,8 @@ public class BankService {
                             .build();
                     paystubDTOList.add(paystubDTO);
                 }
+                else if(tax.getDivision() == 3) {
+                }
                 else {
                     PaystubDTO paystubDTO = PaystubDTO.builder()
                             .title(tax.getName())

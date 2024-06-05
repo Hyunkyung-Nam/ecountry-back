@@ -73,7 +73,7 @@ public class BankController {
         }
     }
     @GetMapping("/list/{accountId}")
-    public ResponseEntity<ApiResponseDTO<List<BankDTO>>> getHistory(@PathVariable Long accountId) {
+    public ResponseEntity<ApiResponseDTO<List<BankDTO>>> getHistory(@PathVariable("countryId") Long accountId) {
         try {
             System.out.println("accountId : "+accountId);
             List<BankDTO> result = bankService.getBank(accountId);
@@ -85,7 +85,7 @@ public class BankController {
     }
     //입금 가능 리스트
     @GetMapping("/students/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<AccountDTO>>> getStudent(@PathVariable Long countryId) {
+    public ResponseEntity<ApiResponseDTO<List<AccountDTO>>> getStudent(@PathVariable("countryId") Long countryId) {
         try {
             List<AccountDTO> result = bankService.getBankList(countryId);
             return ResponseEntity.ok(new ApiResponseDTO<>(true, "입출금 통장 조회 완료", result));
@@ -112,7 +112,7 @@ public class BankController {
     }
     //월급금액확인
     @GetMapping("/salary")
-    public ResponseEntity<ApiResponseDTO<SalaryData>> getSalary(@RequestParam Long studentId) {
+    public ResponseEntity<ApiResponseDTO<SalaryData>> getSalary(@RequestParam(name = "studentId",required = false) Long studentId) {
         try {
             ApiResponseDTO<Integer> apiData = bankService.getSalary(studentId);
             return ResponseEntity.ok(new ApiResponseDTO<>(apiData.getSuccess(), apiData.getMessage(), new SalaryData(apiData.getResult())));
@@ -122,7 +122,7 @@ public class BankController {
     }
     //국가 화폐단위 조회
     @GetMapping("/unit/{countryId}")
-    public ResponseEntity<ApiResponseDTO<JSONObject>> getUnit(@PathVariable Long countryId) {
+    public ResponseEntity<ApiResponseDTO<JSONObject>> getUnit(@PathVariable("countryId") Long countryId) {
         JSONObject responseData = new JSONObject();
         try {
             responseData.put("unit",  bankService.getUnit(countryId));

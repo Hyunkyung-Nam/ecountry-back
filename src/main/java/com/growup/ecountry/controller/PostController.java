@@ -25,14 +25,14 @@ public class PostController {
 
     //뉴스 전체 조회
     @GetMapping("/articles/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<NewsDTO>>> findAllNews(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<List<NewsDTO>>> findAllNews(@PathVariable("countryId") Long countryId){
 
         return ResponseEntity.ok(new ApiResponseDTO<List<NewsDTO>>(true, "뉴스 전체 조회에 성공하였습니다.",postsService.findAllNews(countryId )));
     }
 
     //뉴스 1개 조회
     @GetMapping("/article/{id}")
-    public ResponseEntity<ApiResponseDTO<NewsDTO>> findNews(@PathVariable Long id){
+    public ResponseEntity<ApiResponseDTO<NewsDTO>> findNews(@PathVariable("id") Long id){
 
         boolean success = false;
         NewsDTO newsDTO = postsService.findNews(id);
@@ -62,7 +62,7 @@ public class PostController {
     }
     //뉴스 1개 삭제
     @DeleteMapping("/article/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> deleteNews(@PathVariable Long id){
+    public ResponseEntity<ApiResponseDTO<NullType>> deleteNews(@PathVariable("id") Long id){
         boolean success = postsService.deleteNews(id);
         String msg = success ? "뉴스 1개 삭제에 성공하였습니다." : "뉴스 1개 삭제에 실패하였습니다.";
 
@@ -81,14 +81,14 @@ public class PostController {
 
     //신문고 전체 조회
     @GetMapping("/petitions/{countryId}")
-    public ResponseEntity<ApiResponseDTO<List<PetitionDTO>>> findAllPetitions(@PathVariable Long countryId){
+    public ResponseEntity<ApiResponseDTO<List<PetitionDTO>>> findAllPetitions(@PathVariable("countryId") Long countryId){
 
         return ResponseEntity.ok(new ApiResponseDTO<List<PetitionDTO>>(true, "신문고 전체 조회에 성공하였습니다.",postsService.findAllPetitions(countryId )));
     }
 
     //신문고 1개 조회
     @GetMapping("/petition/{id}")
-    public ResponseEntity<ApiResponseDTO<PetitionDTO>> findPetition(@PathVariable Long id){
+    public ResponseEntity<ApiResponseDTO<PetitionDTO>> findPetition(@PathVariable("id") Long id){
 
         boolean success = false;
         PetitionDTO petitionDTO = postsService.findPetition(id);
@@ -119,7 +119,7 @@ public class PostController {
     }
     //신문고 1개 삭제
     @DeleteMapping("/petition/{id}")
-    public ResponseEntity<ApiResponseDTO<NullType>> deletePetition(@PathVariable Long id){
+    public ResponseEntity<ApiResponseDTO<NullType>> deletePetition(@PathVariable("id") Long id){
         boolean success = postsService.deletePetition(id);
         String msg = success ? "신문고 1개 삭제에 성공하였습니다." : "신문고 1개 삭제에 실패하였습니다.";
 

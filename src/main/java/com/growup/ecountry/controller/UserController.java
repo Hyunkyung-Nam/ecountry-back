@@ -155,7 +155,7 @@ public class UserController {
     }
 
     //국가리스트조회
-    @GetMapping("")
+    @GetMapping()
     public ResponseEntity<ApiResponseDTO<List<CountryDTO>>> findCountryList(@RequestHeader(value = "Authorization") String token) {
         try {
             TokenDTO authToken = jwt.validateToken(token);
