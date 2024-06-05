@@ -34,7 +34,7 @@ public class News {
 
     @ManyToOne
     @JoinColumn(name = "writer_id", insertable = false, updatable = false)
-    private Users users;
+    private Students students;
 
     @Column(name = "writer_id")
     private Long writerId;

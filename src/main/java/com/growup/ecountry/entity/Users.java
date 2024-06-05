@@ -35,8 +35,4 @@ public class Users {
     @OneToMany(mappedBy = "users")
     private List<Countries> countries = new ArrayList<>();
 
-    @Builder.Default
-    @OneToMany(mappedBy = "users", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<News> news = new ArrayList<>();
-
 }

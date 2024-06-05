@@ -5,6 +5,9 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -49,6 +52,10 @@ public class Students {
 
     @Column(name = "job_id")
     private Long jobId;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "students", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<News> news = new ArrayList<>();
 
     public Students(Long countryId,Long jobId) {
         this.countryId = countryId;
